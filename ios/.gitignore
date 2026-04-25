@@ -1,0 +1,78 @@
+# =====================
+# Flutter / Dart
+# =====================
+.dart_tool/
+.packages
+.pub/
+build/
+
+# =====================
+# Android
+# =====================
+android/.gradle/
+android/app/build/
+
+# =====================
+# iOS / macOS
+# =====================
+**/dgph
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+**/*sync/
+.sconsign.dblite
+.tags*
+**/.vagrant/
+**/DerivedData/
+Icon?
+**/Pods/
+**/.symlinks/
+profile
+xcuserdata
+**/.generated/
+
+Flutter/App.framework
+Flutter/Flutter.framework
+Flutter/Flutter.podspec
+Flutter/Generated.xcconfig
+Flutter/ephemeral/
+Flutter/app.flx
+Flutter/app.zip
+Flutter/flutter_assets/
+Flutter/flutter_export_environment.sh
+
+ServiceDefinitions.json
+Runner/GeneratedPluginRegistrant.*
+
+# =====================
+# IDE & OS
+# =====================
+.idea/
+.vscode/
+.DS_Store
+
+# =====================
+# Logs
+# =====================
+*.log
+
+# =====================
+# Firebase (optional)
+# =====================
+google-services.json
+GoogleService-Info.plist
+
+# =====================
+# Env
+# =====================
+.env
+
+# =====================
+# Exceptions
+# =====================
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "954620080623",
+    "firebase_url": "https://smartfarm-3bc36-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smartfarm-3bc36",
+    "storage_bucket": "smartfarm-3bc36.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:954620080623:android:c57d934b1df56cd5b4461a",
+        "android_client_info": {
+          "package_name": "com.example.smartchili_farm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "954620080623-lautfnglbrcrbdis4iqetslllqtfe3pq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartchili_farm",
+            "certificate_hash": "62e64842b404bc186b918940b9f17dc2cb177924"
+          }
+        },
+        {
+          "client_id": "954620080623-nvgg0bt47j2cbmde997275dtk855ou87.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA60h-khMQPUpTgNezxX6VRBb3jNUY_fZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "954620080623-nvgg0bt47j2cbmde997275dtk855ou87.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
