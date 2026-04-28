@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/constants/dummy_data.dart';
 import '../providers/theme_provider.dart';
-import '../providers/auth_provider.dart'; // 🔥 penting
+import '../providers/auth_provider.dart';
+import 'edit_profile_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -15,125 +17,147 @@ class ProfileScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.darkCard : Colors.white;
     final bgColor = isDark ? AppColors.darkBackground : AppColors.background;
-    final profile = DummyData.profileData;
+
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: CustomScrollView(
-        slivers: [
-          _buildProfileHeader(context, profile),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
 
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // ================== INFO KEBUN ==================
-                ProfileSection(
-                  title: AppStrings.infoKebun,
-                  cardColor: cardColor,
-                  children: [
-                    ProfileItem(
-                      icon: Icons.grass_rounded,
-                      label: AppStrings.luasKebun,
-                      trailing: Text(
-                        profile['luasKebun'] ?? '-',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    ProfileItem(
-                      icon: Icons.calendar_today_rounded,
-                      label: AppStrings.mulaiTanam,
-                      trailing: Text(
-                        profile['mulaiTanam'] ?? '-',
-                        style: TextStyle(color: Colors.grey.shade500),
-                      ),
-                    ),
-                  ],
-                ),
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                const SizedBox(height: 14),
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text("Data tidak ditemukan"));
+          }
 
-                // ================== PREFERENSI ==================
-                ProfileSection(
-                  title: AppStrings.preferensi,
-                  cardColor: cardColor,
-                  children: [
-                    const _DarkModeItem(),
-                  ],
-                ),
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
 
-                const SizedBox(height: 14),
+          final email = user.email ?? "-";
+          final alamat = data?['alamatKebun'] ?? "Belum diisi";
 
-                // ================== AKUN ==================
-                ProfileSection(
-                  title: "Akun",
-                  cardColor: cardColor,
-                  children: [
-                    ProfileItem(
-                      icon: Icons.edit_rounded,
-                      label: "Edit Profile",
-                      trailing:
-                          const Icon(Icons.arrow_forward_ios, size: 14),
-                    ),
+          return CustomScrollView(
+            slivers: [
+              _buildProfileHeader(context, email, alamat),
 
-                    // 🔥 LOGOUT FIX
-                    ProfileItem(
-                      icon: Icons.logout_rounded,
-                      label: "Logout",
-                      trailing:
-                          const Icon(Icons.arrow_forward_ios, size: 14),
-                      onTap: () async {
-                        final confirm = await showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text("Logout"),
-                            content:
-                                const Text("Yakin ingin keluar?"),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false),
-                                child: const Text("Batal"),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, true),
-                                child: const Text("Logout"),
-                              ),
-                            ],
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+
+                    // ================== INFO KEBUN ==================
+                    ProfileSection(
+                      title: AppStrings.infoKebun,
+                      cardColor: cardColor,
+                      children: [
+                        ProfileItem(
+                          icon: Icons.location_on,
+                          label: "Alamat Kebun",
+                          trailing: Text(
+                            alamat,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
                           ),
-                        );
-
-                        if (confirm == true) {
-                          final auth =
-                              context.read<AppAuthProvider>();
-                          await auth.logout();
-                        }
-                      },
+                        ),
+                      ],
                     ),
-                  ],
+
+                    const SizedBox(height: 14),
+
+                    // ================== PREFERENSI ==================
+                    ProfileSection(
+                      title: AppStrings.preferensi,
+                      cardColor: cardColor,
+                      children: [
+                        const _DarkModeItem(),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ================== AKUN ==================
+                    ProfileSection(
+                      title: "Akun",
+                      cardColor: cardColor,
+                      children: [
+                        ProfileItem(
+                          icon: Icons.edit_rounded,
+                          label: "Edit Profile",
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditProfileScreen(
+                                  currentAlamat: alamat,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        ProfileItem(
+                          icon: Icons.logout_rounded,
+                          label: "Logout",
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                          onTap: () async {
+                            final confirm = await showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text("Logout"),
+                                content: const Text("Yakin ingin keluar?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text("Batal"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text("Logout"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              final auth =
+                                  context.read<AppAuthProvider>();
+                              await auth.logout();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ================== ABOUT ==================
+                    _AboutCard(cardColor: cardColor),
+
+                    const SizedBox(height: 24),
+                  ]),
                 ),
-
-                const SizedBox(height: 14),
-
-                // ================== ABOUT ==================
-                _AboutCard(cardColor: cardColor),
-
-                const SizedBox(height: 24),
-              ]),
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   // ================== HEADER ==================
   SliverAppBar _buildProfileHeader(
-      BuildContext context, Map<String, String> profile) {
+      BuildContext context, String email, String alamat) {
     return SliverAppBar(
       expandedHeight: 230,
       pinned: true,
@@ -153,7 +177,6 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 20),
 
-                // Avatar
                 Stack(
                   children: [
                     Container(
@@ -191,10 +214,10 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 Text(
-                  profile['nama'] ?? AppStrings.namaUser,
+                  email,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -208,32 +231,12 @@ class ProfileScreen extends StatelessWidget {
                         color: Colors.white70, size: 14),
                     const SizedBox(width: 4),
                     Text(
-                      profile['lokasi'] ??
-                          AppStrings.lokasiKebun,
+                      alamat,
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 12),
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                      ),
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _StatChip(
-                        label: 'Scan',
-                        value: profile['totalScan'] ?? '0'),
-                    const SizedBox(width: 20),
-                    _StatChip(
-                        label: 'Artikel',
-                        value:
-                            profile['totalArtikel'] ?? '0'),
-                    const SizedBox(width: 20),
-                    _StatChip(
-                        label: 'Hari Aktif',
-                        value: profile['hariAktif'] ?? '0'),
                   ],
                 ),
               ],
@@ -241,37 +244,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ================== STAT ==================
-class _StatChip extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatChip({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 11,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -392,12 +364,12 @@ class _AboutCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        children: [
-          const Text(
+        children: const [
+          Text(
             AppStrings.appName,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(AppStrings.appVersion),
         ],
       ),

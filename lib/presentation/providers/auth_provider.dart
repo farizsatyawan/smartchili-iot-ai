@@ -40,7 +40,7 @@ class AppAuthProvider extends ChangeNotifier {
   }
 
   // =============================
-  // REGISTER EMAIL + FIRESTORE 🔥
+  // REGISTER EMAIL + FIRESTORE
   // =============================
   Future<void> registerEmail(
     String email,
@@ -51,7 +51,6 @@ class AppAuthProvider extends ChangeNotifier {
       _loading = true;
       notifyListeners();
 
-      // 🔥 1. Register Firebase Auth
       final userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -60,7 +59,6 @@ class AppAuthProvider extends ChangeNotifier {
 
       final user = userCredential.user;
 
-      // 🔥 2. Simpan ke Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user!.uid)
@@ -87,7 +85,7 @@ class AppAuthProvider extends ChangeNotifier {
   }
 
   // =============================
-  // LOGIN GOOGLE
+  // LOGIN GOOGLE + AUTO CREATE USER
   // =============================
   Future<void> loginGoogle() async {
     try {
@@ -116,15 +114,21 @@ class AppAuthProvider extends ChangeNotifier {
 
       final user = userCredential.user;
 
-      // 🔥 OPTIONAL (cek user sudah ada di Firestore belum)
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user!.uid)
           .get();
 
+      // 🔥 kalau user baru → auto buat data
       if (!doc.exists) {
-        // user Google baru → nanti kita arahkan isi alamat kebun
-        debugPrint("User baru login Google");
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({
+          'email': user.email,
+          'alamatKebun': '',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       }
 
     } catch (e) {
@@ -133,6 +137,51 @@ class AppAuthProvider extends ChangeNotifier {
     } finally {
       _loading = false;
       notifyListeners();
+    }
+  }
+
+  // =============================
+  // GET USER DATA 🔥
+  // =============================
+  Future<Map<String, dynamic>?> getUserData() async {
+    try {
+      final user = _auth.currentUser;
+
+      if (user == null) return null;
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists) return null;
+
+      return doc.data();
+    } catch (e) {
+      debugPrint("Get user error: $e");
+      return null;
+    }
+  }
+
+  // =============================
+  // UPDATE ALAMAT 🔥
+  // =============================
+  Future<void> updateAlamatKebun(String alamat) async {
+    try {
+      final user = _auth.currentUser;
+
+      if (user == null) return;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+        'alamatKebun': alamat,
+      });
+
+    } catch (e) {
+      debugPrint("Update alamat error: $e");
+      throw Exception("Gagal update alamat");
     }
   }
 
