@@ -49,29 +49,7 @@ class DashboardScreen extends StatelessWidget {
       pinned: true,
       stretch: true,
       backgroundColor: AppColors.primaryDark,
-      actions: [
-        Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_rounded,
-                  color: Colors.white, size: 26),
-              onPressed: () {},
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: const BoxDecoration(
-                  color: AppColors.warning,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+      actions: [],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
@@ -150,7 +128,13 @@ class DashboardScreen extends StatelessWidget {
           style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
         ),
         const Spacer(),
-        _RealtimeBadge(isOnline: provider.sensorData?.isOnline ?? false),
+      _RealtimeBadge(
+        isOnline: provider.sensorData?.lastUpdated != null &&
+            DateTime.now()
+                    .difference(DateTime.parse(provider.sensorData!.lastUpdated))
+                    .inMinutes <
+                1,
+      ),
       ],
     );
   }

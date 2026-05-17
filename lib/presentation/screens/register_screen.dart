@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/auth_provider.dart';
 import '../../core/constants/app_colors.dart';
 
@@ -11,9 +12,19 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final namaController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final alamatController = TextEditingController();
+
+  @override
+  void dispose() {
+    namaController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    alamatController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 30),
 
-                  // CARD
+                  // ================= CARD =================
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -55,11 +66,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       children: [
 
-                        // EMAIL
+                        // ================= NAMA =================
                         TextField(
-                          controller: emailController,
+                          controller: namaController,
                           decoration: InputDecoration(
-                            labelText: "Email",
+                            labelText: "Nama",
+                            hintText: "Masukkan nama kamu",
+                            prefixIcon: const Icon(Icons.person),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -68,12 +81,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 16),
 
-                        // PASSWORD
+                        // ================= EMAIL =================
+                        TextField(
+                          controller: emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            labelText: "Email",
+                            prefixIcon: const Icon(Icons.email),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // ================= PASSWORD =================
                         TextField(
                           controller: passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: "Password",
+                            prefixIcon: const Icon(Icons.lock),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -82,13 +111,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 16),
 
-                        // 🔥 ALAMAT KEBUN
+                        // ================= ALAMAT =================
                         TextField(
                           controller: alamatController,
                           maxLines: 2,
                           decoration: InputDecoration(
                             labelText: "Alamat Kebun",
-                            hintText: "Contoh: Desa Makmur, Jawa Tengah",
+                            hintText:
+                                "Contoh: Desa Makmur, Jawa Tengah",
+                            prefixIcon:
+                                const Icon(Icons.location_on),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -97,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 20),
 
-                        // REGISTER BUTTON
+                        // ================= REGISTER BUTTON =================
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -105,46 +137,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius:
+                                    BorderRadius.circular(14),
                               ),
                             ),
                             onPressed: auth.loading
-                            ? null
-                            : () async {
+                                ? null
+                                : () async {
 
-                                // 🔥 VALIDASI INPUT
-                                if (emailController.text.isEmpty ||
-                                    passwordController.text.isEmpty ||
-                                    alamatController.text.isEmpty) {
+                                    // VALIDASI
+                                    if (namaController.text.isEmpty ||
+                                        emailController.text.isEmpty ||
+                                        passwordController.text.isEmpty ||
+                                        alamatController.text.isEmpty) {
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Semua field wajib diisi"),
-                                    ),
-                                  );
-                                  return;
-                                }
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Semua field wajib diisi",
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
 
-                                try {
-                                await auth.registerEmail(
-                                  emailController.text,
-                                  passwordController.text,
-                                  alamatController.text,
-                                );
+                                    try {
 
-                                  debugPrint("Alamat: ${alamatController.text}");
+                                      await auth.registerEmail(
+                                        namaController.text.trim(),
+                                        emailController.text.trim(),
+                                        passwordController.text.trim(),
+                                        alamatController.text.trim(),
+                                      );
 
-                                  // 🔥 BALIK KE LOGIN (BIAR AUTH CHECKER JALAN)
-                                  if (mounted) {
-                                    Navigator.pop(context);
-                                  }
+                                      if (mounted) {
+                                        Navigator.pop(context);
+                                      }
 
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.toString())),
-                                  );
-                                }
-                              },
+                                    } catch (e) {
+
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content:
+                                              Text(e.toString()),
+                                        ),
+                                      );
+                                    }
+                                  },
                             child: auth.loading
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
@@ -159,17 +200,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 16),
 
-                        // GOOGLE REGISTER
+                        // ================= GOOGLE =================
                         SizedBox(
                           width: double.infinity,
                           height: 50,
                           child: OutlinedButton.icon(
                             icon: const Icon(Icons.login),
-                            label:
-                                const Text("Daftar dengan Google"),
+                            label: const Text(
+                              "Daftar dengan Google",
+                            ),
                             style: OutlinedButton.styleFrom(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius:
+                                    BorderRadius.circular(14),
                               ),
                             ),
                             onPressed: auth.loginGoogle,
@@ -181,7 +224,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 20),
 
-                  // BACK TO LOGIN
+                  // ================= LOGIN =================
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -198,7 +241,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
+                            decoration:
+                                TextDecoration.underline,
                           ),
                         ),
                       ),

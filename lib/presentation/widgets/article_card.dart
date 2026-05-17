@@ -11,6 +11,23 @@ class ArticleCard extends StatelessWidget {
     this.onTap,
   });
 
+  // 🔥 Emoji otomatis berdasarkan kategori
+  String getKategoriEmoji(String kategori) {
+    switch (kategori) {
+      case 'Budidaya':
+        return '🌱';
+
+      case 'Hama & Penyakit':
+        return '🐛';
+
+      case 'Panen':
+        return '🧺';
+
+      default:
+        return '🌶';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -39,7 +56,7 @@ class ArticleCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                // Emoji thumbnail
+                // 🔥 Emoji thumbnail
                 Container(
                   width: 70,
                   height: 70,
@@ -57,24 +74,27 @@ class ArticleCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      artikel.emoji,
+                      getKategoriEmoji(artikel.kategori),
                       style: const TextStyle(fontSize: 32),
                     ),
                   ),
                 ),
+
                 const SizedBox(width: 12),
 
-                // Content
+                // 🔥 Content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Badge + waktu baca
+                      // 🔥 Badge kategori
                       Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: warnaKategori.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(20),
@@ -88,33 +108,29 @@ class ArticleCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            artikel.waktuBaca,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
                         ],
                       ),
+
                       const SizedBox(height: 5),
 
-                      // Judul
+                      // 🔥 Judul
                       Text(
                         artikel.judul,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           height: 1.3,
-                          color: isDark ? Colors.white : const Color(0xFF1C1C1C),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1C1C1C),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+
                       const SizedBox(height: 4),
 
-                      // Ringkasan
+                      // 🔥 Ringkasan
                       Text(
                         artikel.ringkasan,
                         style: TextStyle(
@@ -128,7 +144,9 @@ class ArticleCard extends StatelessWidget {
                     ],
                   ),
                 ),
+
                 const SizedBox(width: 8),
+
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,

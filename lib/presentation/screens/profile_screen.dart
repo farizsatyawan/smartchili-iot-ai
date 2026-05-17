@@ -1,103 +1,268 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+
 import '../providers/theme_provider.dart';
 import '../providers/auth_provider.dart';
+
 import 'edit_profile_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  // ==============================
+  // PICK DATE
+  // ==============================
+  Future<void> pickDate(
+    BuildContext context,
+    String uid,
+  ) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      locale: const Locale('id', 'ID'),
+    );
+
+    if (pickedDate != null) {
+      final formattedDate = DateFormat(
+        'dd MMMM yyyy',
+        'id_ID',
+      ).format(pickedDate);
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .update({
+        'mulaiTanam': formattedDate,
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkCard : Colors.white;
-    final bgColor = isDark ? AppColors.darkBackground : AppColors.background;
+    final isDark =
+        Theme.of(context).brightness ==
+            Brightness.dark;
 
-    final user = FirebaseAuth.instance.currentUser;
+    final cardColor =
+        isDark ? AppColors.darkCard : Colors.white;
+
+    final bgColor =
+        isDark
+            ? AppColors.darkBackground
+            : AppColors.background;
+
+    final user =
+        FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: bgColor,
+
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
             .doc(user!.uid)
             .snapshots(),
+
         builder: (context, snapshot) {
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+          if (snapshot.connectionState ==
+              ConnectionState.waiting) {
+            return const Center(
+              child:
+                  CircularProgressIndicator(),
+            );
           }
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("Data tidak ditemukan"));
+          if (!snapshot.hasData ||
+              !snapshot.data!.exists) {
+            return const Center(
+              child:
+                  Text("Data tidak ditemukan"),
+            );
           }
 
-          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          final data =
+              snapshot.data!.data()
+                  as Map<String, dynamic>?;
 
-          final email = user.email ?? "-";
-          final alamat = data?['alamatKebun'] ?? "Belum diisi";
+          final nama =
+              data?['nama'] ??
+                  "Petani Cabai";
+
+          final alamat =
+              data?['alamatKebun'] ??
+                  "Belum diisi";
+
+          final photoUrl =
+              data?['photoUrl'] ?? "";
+
+          final mulaiTanam =
+              data?['mulaiTanam'] ?? "";
 
           return CustomScrollView(
             slivers: [
-              _buildProfileHeader(context, email, alamat),
+              _buildProfileHeader(
+                context,
+                nama,
+                alamat,
+                photoUrl,
+              ),
 
               SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
+                padding:
+                    const EdgeInsets.all(16),
 
+                sliver: SliverList(
+                  delegate:
+                      SliverChildListDelegate([
                     // ================== INFO KEBUN ==================
                     ProfileSection(
-                      title: AppStrings.infoKebun,
+                      title:
+                          AppStrings.infoKebun,
+
                       cardColor: cardColor,
+
                       children: [
                         ProfileItem(
-                          icon: Icons.location_on,
-                          label: "Alamat Kebun",
-                          trailing: Text(
-                            alamat,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
+                          icon:
+                              Icons.eco_rounded,
+
+                          label:
+                              "Mulai Tanam",
+
+                          onTap: () =>
+                              pickDate(
+                                context,
+                                user.uid,
+                              ),
+
+                          trailing: Row(
+                            mainAxisSize:
+                                MainAxisSize.min,
+
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  mulaiTanam
+                                          .isEmpty
+                                      ? "Pilih tanggal"
+                                      : mulaiTanam,
+
+                                  textAlign:
+                                      TextAlign
+                                          .end,
+
+                                  overflow:
+                                      TextOverflow
+                                          .ellipsis,
+
+                                  style:
+                                      TextStyle(
+                                    fontWeight:
+                                        FontWeight
+                                            .w600,
+
+                                    color:
+                                        mulaiTanam
+                                                .isEmpty
+                                            ? Colors
+                                                .grey
+                                            : AppColors
+                                                .primary,
+
+                                    fontStyle:
+                                        mulaiTanam
+                                                .isEmpty
+                                            ? FontStyle
+                                                .italic
+                                            : FontStyle
+                                                .normal,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(
+                                  width: 8),
+
+                              const Icon(
+                                Icons
+                                    .calendar_month,
+                                size: 18,
+                                color: AppColors
+                                    .primary,
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(
+                        height: 14),
 
                     // ================== PREFERENSI ==================
                     ProfileSection(
-                      title: AppStrings.preferensi,
+                      title:
+                          AppStrings.preferensi,
+
                       cardColor: cardColor,
-                      children: [
-                        const _DarkModeItem(),
+
+                      children: const [
+                        _DarkModeItem(),
                       ],
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(
+                        height: 14),
 
                     // ================== AKUN ==================
                     ProfileSection(
                       title: "Akun",
+
                       cardColor: cardColor,
+
                       children: [
                         ProfileItem(
-                          icon: Icons.edit_rounded,
-                          label: "Edit Profile",
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                          icon:
+                              Icons.edit_rounded,
+
+                          label:
+                              "Edit Profile",
+
+                          trailing:
+                              const Icon(
+                            Icons
+                                .arrow_forward_ios,
+                            size: 14,
+                          ),
+
                           onTap: () async {
                             await Navigator.push(
                               context,
+
                               MaterialPageRoute(
-                                builder: (_) => EditProfileScreen(
-                                  currentAlamat: alamat,
+                                builder: (_) =>
+                                    EditProfileScreen(
+                                  currentNama:
+                                      nama,
+
+                                  currentAlamat:
+                                      alamat,
+
+                                  currentPhotoUrl:
+                                      photoUrl,
+
+                                  currentMulaiTanam:
+                                      mulaiTanam,
                                 ),
                               ),
                             );
@@ -105,46 +270,90 @@ class ProfileScreen extends StatelessWidget {
                         ),
 
                         ProfileItem(
-                          icon: Icons.logout_rounded,
+                          icon:
+                              Icons.logout_rounded,
+
                           label: "Logout",
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+
+                          trailing:
+                              const Icon(
+                            Icons
+                                .arrow_forward_ios,
+                            size: 14,
+                          ),
+
                           onTap: () async {
-                            final confirm = await showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text("Logout"),
-                                content: const Text("Yakin ingin keluar?"),
+                            final confirm =
+                                await showDialog(
+                              context:
+                                  context,
+
+                              builder:
+                                  (_) =>
+                                      AlertDialog(
+                                title:
+                                    const Text(
+                                        "Logout"),
+
+                                content:
+                                    const Text(
+                                  "Yakin ingin keluar?",
+                                ),
+
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text("Batal"),
+                                        Navigator.pop(
+                                      context,
+                                      false,
+                                    ),
+
+                                    child:
+                                        const Text(
+                                      "Batal",
+                                    ),
                                   ),
+
                                   TextButton(
                                     onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text("Logout"),
+                                        Navigator.pop(
+                                      context,
+                                      true,
+                                    ),
+
+                                    child:
+                                        const Text(
+                                      "Logout",
+                                    ),
                                   ),
                                 ],
                               ),
                             );
 
-                            if (confirm == true) {
+                            if (confirm ==
+                                true) {
                               final auth =
-                                  context.read<AppAuthProvider>();
-                              await auth.logout();
+                                  context.read<
+                                      AppAuthProvider>();
+
+                              await auth
+                                  .logout();
                             }
                           },
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(
+                        height: 14),
 
                     // ================== ABOUT ==================
-                    _AboutCard(cardColor: cardColor),
+                    _AboutCard(
+                      cardColor: cardColor,
+                    ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(
+                        height: 24),
                   ]),
                 ),
               ),
@@ -157,84 +366,157 @@ class ProfileScreen extends StatelessWidget {
 
   // ================== HEADER ==================
   SliverAppBar _buildProfileHeader(
-      BuildContext context, String email, String alamat) {
+    BuildContext context,
+    String nama,
+    String alamat,
+    String photoUrl,
+  ) {
     return SliverAppBar(
-      expandedHeight: 230,
+      expandedHeight: 240,
       pinned: true,
-      backgroundColor: AppColors.primaryDark,
+
+      backgroundColor:
+          AppColors.primaryDark,
+
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: AppColors.gradientPrimary,
+              colors:
+                  AppColors.gradientPrimary,
+
               begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              end:
+                  Alignment.bottomCenter,
             ),
           ),
+
           child: SafeArea(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
+
               children: [
                 const SizedBox(height: 20),
 
+                // ================= FOTO =================
                 Stack(
                   children: [
                     Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.2),
+                      width: 100,
+                      height: 100,
+
+                      decoration:
+                          BoxDecoration(
+                        shape:
+                            BoxShape.circle,
+
+                        color: Colors.white
+                            .withOpacity(0.2),
+
                         border: Border.all(
-                            color: Colors.white.withOpacity(0.5),
-                            width: 3),
+                          color: Colors.white
+                              .withOpacity(0.5),
+
+                          width: 3,
+                        ),
                       ),
-                      child: const Center(
+
+                      child: ClipOval(
                         child:
-                            Text('👨‍🌾', style: TextStyle(fontSize: 42)),
+                            photoUrl.isNotEmpty
+                                ? Image.network(
+                                    photoUrl,
+                                    fit: BoxFit
+                                        .cover,
+                                  )
+                                : const Center(
+                                    child: Text(
+                                      '👨‍🌾',
+                                      style:
+                                          TextStyle(
+                                        fontSize:
+                                            46,
+                                      ),
+                                    ),
+                                  ),
                       ),
                     ),
+
                     Positioned(
                       right: 0,
                       bottom: 0,
+
                       child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: const BoxDecoration(
-                          color: AppColors.warning,
-                          shape: BoxShape.circle,
+                        width: 30,
+                        height: 30,
+
+                        decoration:
+                            const BoxDecoration(
+                          color:
+                              AppColors.warning,
+
+                          shape:
+                              BoxShape.circle,
                         ),
-                        child: const Icon(Icons.edit_rounded,
-                            color: Colors.white, size: 14),
+
+                        child: const Icon(
+                          Icons.edit_rounded,
+                          color: Colors.white,
+                          size: 15,
+                        ),
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
 
+                // ================= NAMA =================
                 Text(
-                  email,
+                  nama,
+
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                    fontWeight:
+                        FontWeight.w800,
                   ),
                 ),
 
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
 
+                // ================= ALAMAT =================
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment:
+                      MainAxisAlignment
+                          .center,
+
                   children: [
-                    const Icon(Icons.location_on_rounded,
-                        color: Colors.white70, size: 14),
+                    const Icon(
+                      Icons
+                          .location_on_rounded,
+
+                      color: Colors.white70,
+                      size: 14,
+                    ),
+
                     const SizedBox(width: 4),
-                    Text(
-                      alamat,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
+
+                    Flexible(
+                      child: Text(
+                        alamat,
+
+                        overflow:
+                            TextOverflow
+                                .ellipsis,
+
+                        style: TextStyle(
+                          color: Colors.white
+                              .withOpacity(0.8),
+
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -266,25 +548,42 @@ class ProfileSection extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(16),
+
+        borderRadius:
+            BorderRadius.circular(16),
       ),
+
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
         children: [
           Padding(
             padding:
-                const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                const EdgeInsets.fromLTRB(
+              16,
+              14,
+              16,
+              8,
+            ),
+
             child: Text(
               title.toUpperCase(),
+
               style: const TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w700,
+                fontWeight:
+                    FontWeight.w700,
+
                 color: AppColors.primary,
+
                 letterSpacing: 0.8,
               ),
             ),
           ),
+
           const Divider(height: 1),
+
           ...children,
         ],
       ),
@@ -311,14 +610,27 @@ class ProfileItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+
       child: Padding(
         padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary),
+            Icon(
+              icon,
+              color: AppColors.primary,
+            ),
+
             const SizedBox(width: 12),
-            Expanded(child: Text(label)),
+
+            Expanded(
+              child: Text(label),
+            ),
+
             trailing,
           ],
         ),
@@ -334,14 +646,22 @@ class _DarkModeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
+      builder:
+          (context, themeProvider, _) {
         return ProfileItem(
           icon: Icons.dark_mode_rounded,
+
           label: AppStrings.darkMode,
+
           trailing: Switch(
-            value: themeProvider.isDarkMode,
-            onChanged: themeProvider.toggleDarkMode,
-            activeColor: AppColors.primary,
+            value:
+                themeProvider.isDarkMode,
+
+            onChanged:
+                themeProvider.toggleDarkMode,
+
+            activeColor:
+                AppColors.primary,
           ),
         );
       },
@@ -353,23 +673,35 @@ class _DarkModeItem extends StatelessWidget {
 class _AboutCard extends StatelessWidget {
   final Color cardColor;
 
-  const _AboutCard({required this.cardColor});
+  const _AboutCard({
+    required this.cardColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
+
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(16),
+
+        borderRadius:
+            BorderRadius.circular(16),
       ),
+
       child: Column(
         children: const [
           Text(
             AppStrings.appName,
-            style: TextStyle(fontWeight: FontWeight.bold),
+
+            style: TextStyle(
+              fontWeight:
+                  FontWeight.bold,
+            ),
           ),
+
           SizedBox(height: 4),
+
           Text(AppStrings.appVersion),
         ],
       ),
