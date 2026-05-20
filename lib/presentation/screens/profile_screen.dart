@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -13,8 +16,18 @@ import '../providers/auth_provider.dart';
 
 import 'edit_profile_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() =>
+      _ProfileScreenState();
+}
+
+class _ProfileScreenState
+    extends State<ProfileScreen> {
+
+  bool uploadingPhoto = false;
 
   // ==============================
   // PICK DATE
@@ -43,6 +56,54 @@ class ProfileScreen extends StatelessWidget {
           .update({
         'mulaiTanam': formattedDate,
       });
+    }
+  }
+
+  // ==============================
+  // PICK & UPLOAD PHOTO
+  // ==============================
+  Future<void> pickAndUploadImage(
+    BuildContext context,
+    Map<String, dynamic>? data,
+  ) async {
+    try {
+      final picker = ImagePicker();
+
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+
+      if (picked == null) return;
+
+      setState(() {
+        uploadingPhoto = true;
+      });
+
+      final imageFile = File(picked.path);
+
+      await context
+          .read<AppAuthProvider>()
+          .updateProfile(
+            nama: data?['nama'],
+            alamat: data?['alamatKebun'],
+            mulaiTanam: data?['mulaiTanam'],
+            imageFile: imageFile,
+          );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          uploadingPhoto = false;
+        });
+      }
     }
   }
 
@@ -115,6 +176,7 @@ class ProfileScreen extends StatelessWidget {
                 nama,
                 alamat,
                 photoUrl,
+                data,
               ),
 
               SliverPadding(
@@ -370,6 +432,7 @@ class ProfileScreen extends StatelessWidget {
     String nama,
     String alamat,
     String photoUrl,
+    Map<String, dynamic>? data,
   ) {
     return SliverAppBar(
       expandedHeight: 240,
@@ -447,23 +510,55 @@ class ProfileScreen extends StatelessWidget {
                       right: 0,
                       bottom: 0,
 
-                      child: Container(
-                        width: 30,
-                        height: 30,
+                      child: GestureDetector(
+                        onTap:
+                            uploadingPhoto
+                                ? null
+                                : () =>
+                                    pickAndUploadImage(
+                                      context,
+                                      data,
+                                    ),
 
-                        decoration:
-                            const BoxDecoration(
-                          color:
-                              AppColors.warning,
+                        child: Container(
+                          width: 30,
+                          height: 30,
 
-                          shape:
-                              BoxShape.circle,
-                        ),
+                          decoration:
+                              const BoxDecoration(
+                            color:
+                                AppColors.warning,
 
-                        child: const Icon(
-                          Icons.edit_rounded,
-                          color: Colors.white,
-                          size: 15,
+                            shape:
+                                BoxShape.circle,
+                          ),
+
+                          child:
+                              uploadingPhoto
+                                  ? const Padding(
+                                      padding:
+                                          EdgeInsets.all(
+                                              7),
+
+                                      child:
+                                          CircularProgressIndicator(
+                                        strokeWidth:
+                                            2,
+
+                                        color: Colors
+                                            .white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons
+                                          .edit_rounded,
+
+                                      color:
+                                          Colors
+                                              .white,
+
+                                      size: 15,
+                                    ),
                         ),
                       ),
                     ),

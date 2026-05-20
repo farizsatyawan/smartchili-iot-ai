@@ -30,11 +30,13 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness:
+          Brightness.light,
     ),
   );
 
-  await SystemChrome.setPreferredOrientations([
+  await SystemChrome
+      .setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
@@ -42,49 +44,68 @@ Future<void> main() async {
   runApp(const SmartChiliFarmApp());
 }
 
-class SmartChiliFarmApp extends StatelessWidget {
-  const SmartChiliFarmApp({super.key});
+class SmartChiliFarmApp
+    extends StatelessWidget {
+  const SmartChiliFarmApp({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ThemeProvider(),
+          create: (_) =>
+              ThemeProvider(),
         ),
 
         ChangeNotifierProvider(
-          create: (_) => SensorProvider(),
+          create: (_) =>
+              SensorProvider(),
         ),
 
         ChangeNotifierProvider(
-          create: (_) => ScanProvider(),
+          create: (_) =>
+              ScanProvider(),
         ),
 
         ChangeNotifierProvider(
-          create: (_) => AppAuthProvider(),
+          create: (_) =>
+              AppAuthProvider(),
         ),
       ],
 
       child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+        builder:
+            (context, themeProvider, _) {
           return MaterialApp(
             title: 'SmartChili Farm',
 
-            debugShowCheckedModeBanner: false,
+            debugShowCheckedModeBanner:
+                false,
 
             theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
 
-            themeMode: themeProvider.themeMode,
+            darkTheme:
+                AppTheme.darkTheme,
 
-            onGenerateRoute: AppRoutes.generateRoute,
+            themeMode:
+                themeProvider.themeMode,
 
-            // 🔥 LOCALIZATION
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
+            onGenerateRoute:
+                AppRoutes.generateRoute,
+
+            // LOCALIZATION
+            localizationsDelegates:
+                const [
+              GlobalMaterialLocalizations
+                  .delegate,
+
+              GlobalWidgetsLocalizations
+                  .delegate,
+
+              GlobalCupertinoLocalizations
+                  .delegate,
             ],
 
             supportedLocales: const [
@@ -92,9 +113,10 @@ class SmartChiliFarmApp extends StatelessWidget {
               Locale('en', 'US'),
             ],
 
-            locale: const Locale('id', 'ID'),
+            locale:
+                const Locale('id', 'ID'),
 
-            // 🔐 AUTH CHECKER
+            // AUTH CHECKER
             home: const AuthChecker(),
           );
         },
@@ -103,60 +125,89 @@ class SmartChiliFarmApp extends StatelessWidget {
   }
 }
 
-/// 🔐 AUTH CHECKER
-class AuthChecker extends StatelessWidget {
-  const AuthChecker({super.key});
+// ======================================
+// AUTH CHECKER
+// ======================================
+class AuthChecker
+    extends StatelessWidget {
+  const AuthChecker({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: FirebaseAuth.instance
+          .authStateChanges(),
 
       builder: (context, snapshot) {
 
-        // 🔄 Loading auth
+        // LOADING AUTH
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(),
+              child:
+                  CircularProgressIndicator(),
             ),
           );
         }
 
-        // ❌ Belum login
+        // BELUM LOGIN
         if (!snapshot.hasData) {
           return const LoginScreen();
         }
 
-        // ✅ Sudah login
+        // SUDAH LOGIN
         final user = snapshot.data!;
 
-        return FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance
+        return FutureBuilder<
+            DocumentSnapshot>(
+          future: FirebaseFirestore
+              .instance
               .collection('users')
               .doc(user.uid)
               .get(),
 
           builder: (context, snap) {
 
-            // 🔄 Loading firestore
+            // LOADING FIRESTORE
             if (snap.connectionState ==
                 ConnectionState.waiting) {
               return const Scaffold(
                 body: Center(
-                  child: CircularProgressIndicator(),
+                  child:
+                      CircularProgressIndicator(),
                 ),
               );
             }
 
-            // 🔥 USER BARU
+            // JIKA DATA BELUM ADA
             if (!snap.hasData ||
                 !snap.data!.exists) {
               return const InputKebunScreen();
             }
 
-            // ✅ USER SUDAH LENGKAP
+            final data =
+                snap.data!.data()
+                    as Map<String, dynamic>?;
+
+            final nama =
+                data?['nama'] ?? '';
+
+            final alamat =
+                data?['alamatKebun'] ?? '';
+
+            // JIKA DATA BELUM LENGKAP
+            if (nama.toString().trim().isEmpty ||
+                alamat
+                    .toString()
+                    .trim()
+                    .isEmpty) {
+              return const InputKebunScreen();
+            }
+
+            // SUDAH LENGKAP
             return const MainShell();
           },
         );

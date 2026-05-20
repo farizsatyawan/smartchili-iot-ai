@@ -23,19 +23,29 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final initProvider = context.read<ScanProvider>();
+    final isDark =
+        Theme.of(context).brightness ==
+            Brightness.dark;
+
+    final initProvider =
+        context.read<ScanProvider>();
+
     Future.microtask(() {
       initProvider.init();
     });
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🔬 ${AppStrings.scanTitle}'),
+        title: const Text(
+          '🔬 ${AppStrings.scanTitle}',
+        ),
       ),
+
       body: Consumer<ScanProvider>(
         builder: (context, provider, _) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
+
             child: Column(
               children: [
                 // 🔥 PREVIEW GAMBAR
@@ -46,16 +56,27 @@ class _ScanScreenState extends State<ScanScreen> {
 
                 const SizedBox(height: 16),
 
-                _buildEnvironmentInput(),
+                _buildEnvironmentInput(
+                  context,
+                  isDark,
+                ),
+
                 const SizedBox(height: 16),
 
-                _buildActionButtons(context, provider),
+                _buildActionButtons(
+                  context,
+                  provider,
+                ),
+
                 const SizedBox(height: 20),
 
-                if (provider.hasResult && provider.result != null)
-                  AIResultCard(result: provider.result!)
+                if (provider.hasResult &&
+                    provider.result != null)
+                  AIResultCard(
+                    result: provider.result!,
+                  )
                 else if (provider.isIdle)
-                  _InfoBox(),
+                  _InfoBox(isDark: isDark),
 
                 const SizedBox(height: 20),
               ],
@@ -67,59 +88,138 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   // ================== ENV INPUT ==================
-  Widget _buildEnvironmentInput() {
+  Widget _buildEnvironmentInput(
+    BuildContext context,
+    bool isDark,
+  ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+
       children: [
         Container(
           padding: const EdgeInsets.all(14),
+
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.grey.shade100,
+            borderRadius:
+                BorderRadius.circular(16),
+
+            color: isDark
+                ? AppColors.darkCard
+                : Colors.grey.shade100,
           ),
+
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
+
             children: [
-              const Text(
+              Text(
                 "Mode Input Lingkungan",
-                style: TextStyle(fontWeight: FontWeight.w600),
+
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+
+                  color: isDark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
               ),
+
               Switch(
                 value: isAuto,
+
                 onChanged: (val) {
                   setState(() {
                     isAuto = val;
                   });
                 },
+
+                activeColor:
+                    AppColors.primary,
               ),
             ],
           ),
         ),
+
         const SizedBox(height: 12),
 
         if (!isAuto)
           Container(
             padding: const EdgeInsets.all(16),
+
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade300),
+              borderRadius:
+                  BorderRadius.circular(16),
+
+              color: isDark
+                  ? AppColors.darkCard
+                  : Colors.white,
+
+              border: Border.all(
+                color: isDark
+                    ? Colors.white12
+                    : Colors.grey.shade300,
+              ),
             ),
+
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+
               children: [
-                const Text("Inputkan kondisi rata-rata 3 hari terakhir"),
+                Text(
+                  "Inputkan kondisi rata-rata 3 hari terakhir",
+
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white70
+                        : Colors.black87,
+                  ),
+                ),
+
                 const SizedBox(height: 12),
 
-                const Text("Suhu"),
+                Text(
+                  "Suhu",
+
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white
+                        : Colors.black87,
+                    fontWeight:
+                        FontWeight.w600,
+                  ),
+                ),
+
                 DropdownButton<String>(
                   value: selectedSuhu,
+
                   isExpanded: true,
-                  items: ["panas", "normal", "dingin"]
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(e),
-                          ))
+
+                  dropdownColor: isDark
+                      ? AppColors.darkCard
+                      : Colors.white,
+
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
+
+                  items: [
+                    "panas",
+                    "normal",
+                    "dingin"
+                  ]
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e),
+                        ),
+                      )
                       .toList(),
+
                   onChanged: (val) {
                     setState(() {
                       selectedSuhu = val!;
@@ -129,19 +229,50 @@ class _ScanScreenState extends State<ScanScreen> {
 
                 const SizedBox(height: 12),
 
-                const Text("Kelembapan"),
+                Text(
+                  "Kelembapan",
+
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white
+                        : Colors.black87,
+                    fontWeight:
+                        FontWeight.w600,
+                  ),
+                ),
+
                 DropdownButton<String>(
                   value: selectedKelembapan,
+
                   isExpanded: true,
-                  items: ["rendah", "sedang", "tinggi"]
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(e),
-                          ))
+
+                  dropdownColor: isDark
+                      ? AppColors.darkCard
+                      : Colors.white,
+
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
+
+                  items: [
+                    "rendah",
+                    "sedang",
+                    "tinggi"
+                  ]
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e),
+                        ),
+                      )
                       .toList(),
+
                   onChanged: (val) {
                     setState(() {
-                      selectedKelembapan = val!;
+                      selectedKelembapan =
+                          val!;
                     });
                   },
                 ),
@@ -153,29 +284,50 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   // ================== BUTTON ==================
-  Widget _buildActionButtons(BuildContext context, ScanProvider provider) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    ScanProvider provider,
+  ) {
     if (provider.hasResult) {
       return Row(
         children: [
           Expanded(
             child: OutlinedButton.icon(
               onPressed: provider.reset,
-              icon: const Icon(Icons.refresh_rounded,
-                  color: AppColors.primary),
+
+              icon: const Icon(
+                Icons.refresh_rounded,
+                color: AppColors.primary,
+              ),
+
               label: const Text(
                 AppStrings.scanAgain,
-                style: TextStyle(color: AppColors.primary),
+
+                style: TextStyle(
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
+
           const SizedBox(width: 12),
+
           Expanded(
             child: ElevatedButton.icon(
               onPressed: () {},
-              icon: const Icon(Icons.save_alt_rounded,
-                  color: Colors.white),
-              label: const Text(AppStrings.scanSave,
-                  style: TextStyle(color: Colors.white)),
+
+              icon: const Icon(
+                Icons.save_alt_rounded,
+                color: Colors.white,
+              ),
+
+              label: const Text(
+                AppStrings.scanSave,
+
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ],
@@ -185,43 +337,83 @@ class _ScanScreenState extends State<ScanScreen> {
     return SizedBox(
       width: double.infinity,
       height: 54,
+
       child: ElevatedButton.icon(
         onPressed: provider.isAnalyzing
             ? null
             : () async {
-                final picker = ImagePicker();
+                final picker =
+                    ImagePicker();
 
                 // 🔥 POPUP PILIHAN
-                final source = await showModalBottomSheet<ImageSource>(
+                final source =
+                    await showModalBottomSheet<
+                        ImageSource>(
                   context: context,
-                  shape: const RoundedRectangleBorder(
+
+                  shape:
+                      const RoundedRectangleBorder(
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
+                        BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
                   ),
-                  builder: (context) => SafeArea(
+
+                  builder: (context) =>
+                      SafeArea(
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisSize:
+                          MainAxisSize.min,
+
                       children: [
-                        const SizedBox(height: 12),
+                        const SizedBox(
+                            height: 12),
+
                         const Text(
                           "Pilih Sumber Gambar",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+
+                          style: TextStyle(
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
                         ),
-                        const SizedBox(height: 10),
+
+                        const SizedBox(
+                            height: 10),
 
                         ListTile(
-                          leading: const Icon(Icons.camera_alt_rounded),
-                          title: const Text("Ambil dari Kamera"),
+                          leading: const Icon(
+                            Icons
+                                .camera_alt_rounded,
+                          ),
+
+                          title: const Text(
+                            "Ambil dari Kamera",
+                          ),
+
                           onTap: () =>
-                              Navigator.pop(context, ImageSource.camera),
+                              Navigator.pop(
+                            context,
+                            ImageSource.camera,
+                          ),
                         ),
 
                         ListTile(
                           leading:
-                              const Icon(Icons.photo_library_rounded),
-                          title: const Text("Pilih dari Gallery"),
+                              const Icon(
+                            Icons
+                                .photo_library_rounded,
+                          ),
+
+                          title: const Text(
+                            "Pilih dari Gallery",
+                          ),
+
                           onTap: () =>
-                              Navigator.pop(context, ImageSource.gallery),
+                              Navigator.pop(
+                            context,
+                            ImageSource.gallery,
+                          ),
                         ),
                       ],
                     ),
@@ -230,7 +422,8 @@ class _ScanScreenState extends State<ScanScreen> {
 
                 if (source == null) return;
 
-                final pickedFile = await picker.pickImage(
+                final pickedFile =
+                    await picker.pickImage(
                   source: source,
                   imageQuality: 85,
                 );
@@ -238,16 +431,30 @@ class _ScanScreenState extends State<ScanScreen> {
                 if (pickedFile != null) {
                   provider.analyzeImage(
                     pickedFile.path,
-                    suhu: isAuto ? null : selectedSuhu,
-                    kelembapan:
-                        isAuto ? null : selectedKelembapan,
+
+                    suhu: isAuto
+                        ? null
+                        : selectedSuhu,
+
+                    kelembapan: isAuto
+                        ? null
+                        : selectedKelembapan,
                   );
                 }
               },
-        icon: const Icon(Icons.camera_alt_rounded,
-            color: Colors.white),
-        label: const Text("Scan Daun",
-            style: TextStyle(color: Colors.white)),
+
+        icon: const Icon(
+          Icons.camera_alt_rounded,
+          color: Colors.white,
+        ),
+
+        label: const Text(
+          "Scan Daun",
+
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
@@ -268,13 +475,19 @@ class _CameraPreview extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: 280,
+
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius:
+            BorderRadius.circular(20),
       ),
+
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius:
+            BorderRadius.circular(20),
+
         child: Stack(
           fit: StackFit.expand,
+
           children: [
             if (imagePath != null)
               Image.file(
@@ -283,22 +496,36 @@ class _CameraPreview extends StatelessWidget {
               )
             else
               Container(
-                decoration: const BoxDecoration(
+                decoration:
+                    const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF0D2137), Color(0xFF1A3A1A)],
+                    colors: [
+                      Color(0xFF0D2137),
+                      Color(0xFF1A3A1A),
+                    ],
                   ),
                 ),
+
                 child: const Center(
-                  child: Icon(Icons.camera_alt,
-                      color: Colors.white, size: 50),
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 50,
+                  ),
                 ),
               ),
 
-            if (status == ScanStatus.analyzing)
+            if (status ==
+                ScanStatus.analyzing)
               Container(
-                color: Colors.black.withOpacity(0.4),
+                color:
+                    Colors.black.withOpacity(
+                  0.4,
+                ),
+
                 child: const Center(
-                  child: CircularProgressIndicator(),
+                  child:
+                      CircularProgressIndicator(),
                 ),
               ),
           ],
@@ -310,24 +537,47 @@ class _CameraPreview extends StatelessWidget {
 
 // ================== INFO BOX ==================
 class _InfoBox extends StatelessWidget {
+  final bool isDark;
+
+  const _InfoBox({
+    required this.isDark,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
+
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
+        color:
+            AppColors.primary.withOpacity(
+          0.08,
+        ),
+
+        borderRadius:
+            BorderRadius.circular(14),
       ),
+
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded,
-              color: AppColors.primary),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.primary,
+          ),
+
           const SizedBox(width: 10),
+
           Expanded(
             child: Text(
               AppStrings.infoAI,
+
               style: TextStyle(
-                  fontSize: 12, color: Colors.grey.shade600),
+                fontSize: 12,
+
+                color: isDark
+                    ? Colors.white70
+                    : Colors.grey.shade600,
+              ),
             ),
           ),
         ],
