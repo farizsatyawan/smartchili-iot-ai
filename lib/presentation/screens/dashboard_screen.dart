@@ -55,8 +55,10 @@ class DashboardScreen extends StatelessWidget {
 
                     const SizedBox(height: 18),
 
-                    // 🔥 MANUAL PUMP CARD
-                    _buildManualPumpCard(context),
+                    // 🔥 MANUAL PUMP
+                    _buildManualPumpCard(
+                      context,
+                    ),
 
                     const SizedBox(height: 18),
 
@@ -397,6 +399,234 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // ── CHART CARD ────────────────────────────────
+  Widget _buildChartCard(
+    BuildContext context,
+    SensorProvider provider,
+  ) {
+    final isDark =
+        Theme.of(context).brightness ==
+            Brightness.dark;
+
+    final cardColor = isDark
+        ? AppColors.darkCard
+        : Colors.white;
+
+    final textColor = isDark
+        ? Colors.white
+        : AppColors.textPrimary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+
+        borderRadius:
+            BorderRadius.circular(
+          AppSizes.radiusLarge,
+        ),
+
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black
+                .withOpacity(0.06),
+
+            blurRadius: 16,
+
+            offset: const Offset(
+              0,
+              4,
+            ),
+          ),
+        ],
+      ),
+
+      padding: const EdgeInsets.all(
+        AppSizes.paddingL,
+      ),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
+        children: [
+
+          // HEADER
+          Row(
+            children: [
+
+              const Icon(
+                Icons.show_chart_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+
+              const SizedBox(width: 8),
+
+              Text(
+                AppStrings.monitoringTitle,
+
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight:
+                      FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
+
+              const Spacer(),
+
+              Text(
+                AppStrings.chart24Jam,
+
+                style: TextStyle(
+                  fontSize: 12,
+                  color:
+                      Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // TOGGLE BUTTON
+          Row(
+            children: [
+
+              ChartToggleButton(
+                label: 'Suhu',
+
+                isActive:
+                    provider.selectedChart ==
+                        0,
+
+                activeColor:
+                    AppColors.chartSuhu,
+
+                onTap: () =>
+                    provider.selectChart(
+                  0,
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              ChartToggleButton(
+                label: 'Udara',
+
+                isActive:
+                    provider.selectedChart ==
+                        1,
+
+                activeColor:
+                    AppColors
+                        .chartKelembapanUdara,
+
+                onTap: () =>
+                    provider.selectChart(
+                  1,
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              ChartToggleButton(
+                label: 'Tanah',
+
+                isActive:
+                    provider.selectedChart ==
+                        2,
+
+                activeColor:
+                    AppColors
+                        .chartKelembapanTanah,
+
+                onTap: () =>
+                    provider.selectChart(
+                  2,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // CHART
+          SizedBox(
+            height:
+                AppSizes.chartHeight,
+
+            child: provider.isLoading
+                ? const Center(
+                    child:
+                        CircularProgressIndicator(
+                      color:
+                          AppColors.primary,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : LineChartWidget(
+                    data: provider
+                        .currentChartData,
+
+                    color: _getChartColor(
+                      provider
+                          .selectedChart,
+                    ),
+                  ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // LABEL JAM
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment
+                    .spaceBetween,
+
+            children: [
+              '00:00',
+              '06:00',
+              '12:00',
+              '18:00',
+              '23:00',
+            ]
+                .map(
+                  (t) => Text(
+                    t,
+
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors
+                          .grey
+                          .shade500,
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getChartColor(
+    int index,
+  ) {
+    switch (index) {
+      case 1:
+        return AppColors
+            .chartKelembapanUdara;
+
+      case 2:
+        return AppColors
+            .chartKelembapanTanah;
+
+      default:
+        return AppColors.chartSuhu;
+    }
+  }
+
   // ── MANUAL PUMP CARD ─────────────────────────
   Widget _buildManualPumpCard(
     BuildContext context,
@@ -618,128 +848,6 @@ class DashboardScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  // ── CHART CARD ────────────────────────────────
-  Widget _buildChartCard(
-    BuildContext context,
-    SensorProvider provider,
-  ) {
-    final isDark =
-        Theme.of(context)
-                .brightness ==
-            Brightness.dark;
-
-    final cardColor = isDark
-        ? AppColors.darkCard
-        : Colors.white;
-
-    final textColor = isDark
-        ? Colors.white
-        : AppColors.textPrimary;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-
-        borderRadius:
-            BorderRadius.circular(
-          AppSizes.radiusLarge,
-        ),
-
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black
-                .withOpacity(0.06),
-
-            blurRadius: 16,
-
-            offset: const Offset(
-              0,
-              4,
-            ),
-          ),
-        ],
-      ),
-
-      padding: const EdgeInsets.all(
-        AppSizes.paddingL,
-      ),
-
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.show_chart_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
-
-              const SizedBox(width: 8),
-
-              Text(
-                AppStrings
-                    .monitoringTitle,
-
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight:
-                      FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          SizedBox(
-            height:
-                AppSizes.chartHeight,
-
-            child: provider.isLoading
-                ? const Center(
-                    child:
-                        CircularProgressIndicator(
-                      color:
-                          AppColors.primary,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : LineChartWidget(
-                    data: provider
-                        .currentChartData,
-
-                    color: _getChartColor(
-                      provider
-                          .selectedChart,
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getChartColor(
-    int index,
-  ) {
-    switch (index) {
-      case 1:
-        return AppColors
-            .chartKelembapanUdara;
-
-      case 2:
-        return AppColors
-            .chartKelembapanTanah;
-
-      default:
-        return AppColors.chartSuhu;
-    }
   }
 
   // ── BUTTON SCAN ───────────────────────────────
